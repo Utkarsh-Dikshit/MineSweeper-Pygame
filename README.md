@@ -1,11 +1,15 @@
 # MineSweeper-Pygame
 This repository contains a simple Minesweeper game implemented using Pygame. The game features a grid of cells, some of which contain hidden mines. The goal is to reveal all non-mine cells without triggering any mines.
 
+## Screenshot
+![Minesweeper](https://github.com/Utkarsh-Dikshit/MineSweeper-Pygame/assets/143602487/a24cda5a-d564-4061-9b4c-9c2e7fe489f3)
+
 ## Features:
 - Classic Minesweeper gameplay
 - Left-click to reveal cells
 - Right-click to flag potential mines
 - Emoji-click to restart the game
+- Time Indications
 - Emoji Indicators:
   - 😊 Smiling emoji: Game in progress
   - ☹️ Sad emoji: You lose (triggered a mine)
