@@ -9,6 +9,9 @@ class Game:
         pg.init()
         pg.display.set_caption('Minesweeper')
         
+        icon = pg.image.load("assets/icon/icon.png")
+        pg.display.set_icon(icon)
+
         self.width = 360 + 10
         self.height = 360 + 110
         self.win = pg.display.set_mode((self.width, self.height))

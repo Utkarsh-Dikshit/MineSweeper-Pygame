@@ -22,7 +22,7 @@ This repository contains a simple Minesweeper game implemented using Pygame. The
 2. Clone this repository to your local machine.
 3. Run the following command to start the game:
    ```
-   python main.py
+   python game.py
    ```
 
 ## Controls:

@@ -105,7 +105,7 @@ class Grid:
                 return None
             
             self.grid_list[i][j] = 'r'
-            
+
         else:
             return None
 
@@ -191,7 +191,7 @@ class Grid:
         # Set mine positions and clues
         self.mine_pos_list = []
         self.selectMinePositions()
-        print (self.mine_pos_list)
+        # print (self.mine_pos_list) # bomb position (for testing)
         
         # -1 = "Bomb"
         # 0 = "No Clue(Empty and no nearby bomb)"
