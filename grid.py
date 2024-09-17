@@ -13,7 +13,7 @@ class Grid:
         self.entity = Entity()
 
         # Load font for displaying clues
-        self.font_clue = self.entity.font1
+        self.clue_font = self.entity.clue_font
 
         self.emoji_rect = pg.Rect(self.entity.emoji_img_rect.x - 5, self.entity.emoji_img_rect.y - 5, 
                                   self.entity.emoji_img_rect.width + 10, self.entity.emoji_img_rect.height + 10)
@@ -29,12 +29,9 @@ class Grid:
                 i += 1
                 self.mine_pos_list.append((x, y))
 
-
     # Draw the main Grid
-    def drawGrid(self, win, left_button_clicked, right_button_clicked):
-        # Get mouse position
-        mouse_x, mouse_y = pg.mouse.get_pos()
-        
+    def drawGrid(self, win, left_button_clicked, right_button_clicked, mouse_x, mouse_y):
+
         # Calculate grid cell indices for the mouse position
         row = (mouse_y - 105) // self.cell_size
         col = (mouse_x - 5) // self.cell_size
@@ -43,7 +40,7 @@ class Grid:
         if (self.game_over == False and ((self.num_flags == 0 and self.allFlagPlacedCorrectly()) or self.allNonMinesFound())):
             self.game_over = True
             self.entity.win_sound.play()
-            self.game_state = 2
+            self.game_state = "won"
 
         for i in range(self.num_rows):
             for j in range(self.num_col):
@@ -52,8 +49,8 @@ class Grid:
                 if (self.grid_list[i][j] == 'r'):
                     self.hidden_color = (30, 30, 46)
 
-                # Mine correctly placed and gameover (either win or loose)
-                elif (self.game_over == True and (i, j) in self.mine_pos_list and self.grid_list[i][j] ==  'f'):
+                # Flag correctly placed and gameover (either win or loose)
+                elif (self.grid_list[i][j] ==  'f' and self.game_over == True and (i, j) in self.mine_pos_list):
                     self.hidden_color = (102, 0 , 0)
 
                 # Check if the mouse is within the grid bounds
@@ -67,26 +64,26 @@ class Grid:
                 else:
                     self.hidden_color = (56, 64, 72)
 
-                rect = pg.Rect(5 + j * self.cell_size, 5 + 100 + i * self.cell_size, self.cell_size - 1, self.cell_size - 1)
-                pg.draw.rect(win, self.hidden_color, rect)
+                cell = pg.Rect(5 + j * self.cell_size, 5 + 100 + i * self.cell_size, self.cell_size - 1, self.cell_size - 1)
+                pg.draw.rect(win, self.hidden_color, cell)
 
                 # Display all the bombs if gameover
                 if (self.game_over and self.grid_list[i][j] == 'x'):
-                    win.blit(self.entity.mine, rect)
+                    win.blit(self.entity.mine_img, cell)
 
                 # Display clue if revealed
                 if (self.grid_list[i][j] == 'r' and self.clue_list[i][j] > 0):
-                    clue_text = self.font_clue.render(f"{self.clue_list[i][j]}", True, (0, 0, 255))
-                    win.blit(clue_text, pg.Rect(rect.x + (rect.width - clue_text.get_size()[0]) / 2, rect.y + (rect.height - clue_text.get_size()[1]) / 2, rect.width, rect.height))
+                    clue_text = self.clue_font.render(f"{self.clue_list[i][j]}", True, (0, 0, 255))
+                    win.blit(clue_text, pg.Rect(cell.x + (cell.width - clue_text.get_size()[0]) / 2, cell.y + (cell.height - clue_text.get_size()[1]) / 2, cell.width, cell.height))
 
                 # Display flag if cell is flagged
                 if (self.grid_list[i][j] == 'f'):
-                    win.blit(self.entity.flag, rect)
+                    win.blit(self.entity.flag_img, cell)
 
         # Drawing Display Window on Top (Hollow Rec, emoji rec)
         pg.draw.rect(win, (255, 255, 255), pg.Rect(5, 5, pg.display.get_window_size()[0] - 10, 100 - 5), 2, 3)
         pg.draw.rect(win, self.emoji_rect_color, self.emoji_rect, 0, 3)
-        
+
     # Recursive algorithm to reveal cells
     def dig(self, i, j):
         self.dug.append((i, j))
@@ -95,7 +92,7 @@ class Grid:
         if (self.grid_list[i][j] != 'f'):
             if self.grid_list[i][j] == "x":
                 self.entity.lose_sound.play()
-                self.game_state = 1
+                self.game_state = "lose"
                 self.game_over = True
                 return None
             
@@ -132,7 +129,6 @@ class Grid:
     def placeClues(self):
         for i in range(self.num_rows):
             for j in range(self.num_col):
-
                 if (self.grid_list[i][j] != 'x'):
                     total_mines = self.checkNeighbours(i, j)
                     if total_mines > 0:
@@ -140,16 +136,16 @@ class Grid:
                 else:
                     self.clue_list[i][j] = -1
 
+    # Checking that player has won or not
     def allNonMinesFound(self):
         for i in range(self.num_rows):
             for j in range(self.num_col):
                 if self.grid_list[i][j] != 'r' and self.clue_list[i][j] != -1:
                     return False
         return True
-
     def allFlagPlacedCorrectly(self):
-        for i in self.mine_pos_list:
-            if (self.grid_list[i[0]][i[1]] != 'f'):
+        for pos in self.mine_pos_list:
+            if (self.grid_list[pos[0]][pos[1]] != 'f'):
                 return False
         return True
 
@@ -175,8 +171,10 @@ class Grid:
                     self.grid_list[index_y][index_x] = '-'
 
     def reset(self):
+        # These properties changes with reseting the game
         self.num_flags = 10
         self.game_over = False
+
         self.dug = []
 
         # Initialize grid list
@@ -195,11 +193,8 @@ class Grid:
         
         # -1 = "Bomb"
         # 0 = "No Clue(Empty and no nearby bomb)"
-        # 1 - 8 = " With Clues"
+        # 1 - 8 = "With Clues"
         self.clue_list = [[0 for i in range(self.num_col)] for j in range(self.num_rows)]
         self.placeClues()
 
-        # 0 - "running"
-        # 1 - "loose"
-        # 2 - "won"
-        self.game_state = 0
+        self.game_state = "running"
